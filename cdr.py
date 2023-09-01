@@ -6,11 +6,11 @@ from datetime import datetime
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 
 class cdr:
-    def __init__(self, xml):
+    def __init__(self, xml, progress_bar=False):
         # Parse label
         self.xml = xml
         self.label = et.parse(self.xml).getroot()
@@ -24,16 +24,34 @@ class cdr:
         )
 
         # Parse CSV
-        self.data = pd.read_csv(self.csv, engine="python")
+        with open(self.csv, mode="r") as fd:
+            nlines = len(fd.readlines())
 
-    def writeRSF(self):
+        if progress_bar:
+            self.data = pd.concat(
+                [
+                    chunk
+                    for chunk in tqdm(
+                        pd.read_csv(self.csv, chunksize=100, engine="python"),
+                        desc="Loading CDR",
+                        total=np.ceil(nlines / 100),
+                        unit="chunk",
+                    )
+                ]
+            )
+        else:
+            self.data = pd.read_csv(self.csv, engine="python")
+
+    def writeRSF(self, progress_bar=False):
         # Pull out active sounding
         data_active = self.data[self.data["record_type"] == 0]
         modes = data_active["mode_name"].unique()
 
-        for mode in modes:
+        for mode in tqdm(
+            modes, desc="Writing RSF Files", disable=(not progress_bar), unit="file"
+        ):
             data_active_sub = data_active[data_active["mode_name"] == mode]
-            
+
             # Make name from CSV name
             rsf = self.csv.replace(".csv", "_%s.rsf" % mode)
 
