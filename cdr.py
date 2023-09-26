@@ -16,7 +16,7 @@ class cdr:
         self.label = et.parse(self.xml).getroot()
 
         # Get CSV name
-        self.csv = (
+        self.csv = os.path.dirname(self.xml) + "/" + (
             self.label.find("{http://pds.nasa.gov/pds4/pds/v1}File_Area_Observational")
             .find("{http://pds.nasa.gov/pds4/pds/v1}File")
             .find("{http://pds.nasa.gov/pds4/pds/v1}file_name")
@@ -53,7 +53,7 @@ class cdr:
             data_active_sub = data_active[data_active["mode_name"] == mode]
 
             # Make name from CSV name
-            rsf = self.csv.replace(".csv", "_%s.rsf" % mode)
+            rsf = os.path.abspath(self.csv.replace(".csv", "_%s.rsf" % mode))
 
             # Get number of samples and sample interval for mode
             nsamp = data_active_sub["n_samples"].to_numpy()[0]
