@@ -58,6 +58,11 @@ class cdr:
             # Get number of samples and sample interval for mode
             nsamp = data_active_sub["n_samples"].to_numpy()[0]
             dt = data_active_sub["sample_time_increment"].to_numpy()[0]
+            
+            # Remove stationary soundings and get spacing between soundings
+            data_active_sub_roving = data_active_sub[data_active_sub["stationary_sounding"] == 0]
+            dx = data_active_sub_roving["sounding_group_spacing"].to_numpy()[0]
+            
 
             # Write RSF header
             fd = open(rsf, mode="w")
@@ -75,10 +80,10 @@ class cdr:
             fd.write('\tunit1="ns"\n')
             fd.write("\tn1=%d\n\to1=0\n\td1=%.9f\n" % (nsamp, dt))
             fd.write('\tlabel2="Trace"\n')
-            fd.write("\tn2=%d\n\to2=0\n\td2=1\n" % (len(data_active_sub)))
+            fd.write("\tn2=%d\n\to2=0\n\td2=%2.2f\n" % (len(data_active_sub_roving), dx))      #stationary soundings not included
 
             # Extract and write data
             startC = "s0001"
             stopC = "s" + str(nsamp)
-            rgram = data_active_sub.loc[:, startC:stopC].to_numpy()
+            rgram = data_active_sub_roving.loc[:, startC:stopC].to_numpy()          #stationary soundings not included
             rgram.astype(np.float32).tofile(rsf + "@")
