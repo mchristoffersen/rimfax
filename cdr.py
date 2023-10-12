@@ -58,11 +58,16 @@ class cdr:
             # Get number of samples and sample interval for mode
             nsamp = data_active_sub["n_samples"].to_numpy()[0]
             dt = data_active_sub["sample_time_increment"].to_numpy()[0]
-            
+
             # Remove stationary soundings and get spacing between soundings
             data_active_sub_roving = data_active_sub[data_active_sub["stationary_sounding"] == 0]
             dx = data_active_sub_roving["sounding_group_spacing"].to_numpy()[0]
-            
+
+            # Check assumption that sounding group spacing is constant, whine and quit if not
+            if(len(np.unique(data_active_sub_roving["sounding_group_spacing"])) != 1):
+                print("Non-constant sample group spacing:", np.unique(data_active_sub_roving["sounding_group_spacing"]))
+                print("File:", self.csv)
+                print("Not handled. Quitting.")
 
             # Write RSF header
             fd = open(rsf, mode="w")
@@ -73,17 +78,24 @@ class cdr:
                 "4.0\tsfrimfaxread\t%s:\t%s@%s\t%s\n\n"
                 % (os.getcwd(), getpass.getuser(), socket.gethostname(), dt_string)
             )
-            fd.write('\tin="%s"\n' % (rsf + "@"))
+            fd.write('\tin="stdin"\n')
             fd.write('\tdata_format="native_float"\n')
             fd.write("\tesize=4\n")
             fd.write('\tlabel1="Time"\n')
             fd.write('\tunit1="ns"\n')
             fd.write("\tn1=%d\n\to1=0\n\td1=%.9f\n" % (nsamp, dt))
-            fd.write('\tlabel2="Trace"\n')
-            fd.write("\tn2=%d\n\to2=0\n\td2=%2.2f\n" % (len(data_active_sub_roving), dx))      #stationary soundings not included
+            fd.write('\tlabel2="Distance"\n')
+            fd.write('\tunit2="m"')
+            fd.write("\tn2=%d\n\to2=0\n\td2=%2.2f\n" % (len(data_active_sub_roving), dx/100.0))
+            fd.write("\n\f\f\x04") # nl ff ff eot
+
+            fd.close()
 
             # Extract and write data
             startC = "s0001"
             stopC = "s" + str(nsamp)
-            rgram = data_active_sub_roving.loc[:, startC:stopC].to_numpy()          #stationary soundings not included
-            rgram.astype(np.float32).tofile(rsf + "@")
+            rgram = data_active_sub_roving.loc[:, startC:stopC].to_numpy().astype(np.float32)
+
+            fd = open(rsf, mode="ab")
+            rgram.tofile(fd)
+            fd.close()
