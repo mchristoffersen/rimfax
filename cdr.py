@@ -68,6 +68,7 @@ class cdr:
                 print("Non-constant sample group spacing:", np.unique(data_active_sub_roving["sounding_group_spacing"]))
                 print("File:", self.csv)
                 print("Not handled. Quitting.")
+                return
 
             # Write RSF header
             fd = open(rsf, mode="w")
@@ -85,7 +86,7 @@ class cdr:
             fd.write('\tunit1="ns"\n')
             fd.write("\tn1=%d\n\to1=0\n\td1=%.9f\n" % (nsamp, dt))
             fd.write('\tlabel2="Distance"\n')
-            fd.write('\tunit2="m"')
+            fd.write('\tunit2="m"\n')
             fd.write("\tn2=%d\n\to2=0\n\td2=%2.2f\n" % (len(data_active_sub_roving), dx/100.0))
             fd.write("\n\f\f\x04") # nl ff ff eot
 
