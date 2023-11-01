@@ -56,12 +56,18 @@ class cdr:
             rsf = os.path.abspath(self.csv.replace(".csv", "_%s.rsf" % mode))
 
             # Get number of samples and sample interval for mode
-            nsamp = data_active_sub["n_samples"].to_numpy()[0]
+            #print(data_active_sub["n_samples"].mode())
+            nsamp = data_active_sub["n_samples"].mode()
             dt = data_active_sub["sample_time_increment"].to_numpy()[0]
 
             # Remove stationary soundings and get spacing between soundings
             data_active_sub_roving = data_active_sub[data_active_sub["stationary_sounding"] == 0]
+            if(len(data_active_sub_roving) == 0):
+                print("Skipping RSF build for mode:", mode)
+                continue
+            
             dx = data_active_sub_roving["sounding_group_spacing"].to_numpy()[0]
+
 
             # Check assumption that sounding group spacing is constant, whine and quit if not
             if(len(np.unique(data_active_sub_roving["sounding_group_spacing"])) != 1):
@@ -95,6 +101,7 @@ class cdr:
             # Extract and write data
             startC = "s0001"
             stopC = "s" + str(nsamp)
+            print(stopC, rsf)
             rgram = data_active_sub_roving.loc[:, startC:stopC].to_numpy().astype(np.float32)
 
             fd = open(rsf, mode="ab")

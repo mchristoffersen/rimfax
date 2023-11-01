@@ -8,7 +8,7 @@ from cdr import cdr
 def cli():
     parser = argparse.ArgumentParser(description="Convert RIMFAX CDR Files to RSF")
     parser.add_argument("files", type=str, nargs="+", help="XML label(s) of file(s) to convert")
-    parser.add_argument("-p", "--progress_bar", action="store_true", help="Display progress bars")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     return parser.parse_args()
 
 
@@ -26,8 +26,8 @@ def main():
             sys.stderr.write("%s extension is not .xml, skipping\n" % file)
 
         # Open and write out RSF
-        rfax = cdr(file, progress_bar=args.progress_bar)
-        rfax.writeRSF(progress_bar=args.progress_bar)
+        rfax = cdr(file, progress_bar=args.verbose)
+        rfax.writeRSF(progress_bar=args.verbose)
 
 
 if __name__ == '__main__':
