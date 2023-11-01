@@ -57,7 +57,7 @@ class cdr:
 
             # Get number of samples and sample interval for mode
             #print(data_active_sub["n_samples"].mode())
-            nsamp = data_active_sub["n_samples"].mode()
+            nsamp = data_active_sub["n_samples"].mode()[0]
             dt = data_active_sub["sample_time_increment"].to_numpy()[0]
 
             # Remove stationary soundings and get spacing between soundings
@@ -101,7 +101,6 @@ class cdr:
             # Extract and write data
             startC = "s0001"
             stopC = "s" + str(nsamp)
-            print(stopC, rsf)
             rgram = data_active_sub_roving.loc[:, startC:stopC].to_numpy().astype(np.float32)
 
             fd = open(rsf, mode="ab")
